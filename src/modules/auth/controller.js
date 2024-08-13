@@ -4,7 +4,7 @@ module.exports = {
     async login(req, res) {
         try {
             const {email, password} = req.body;
-            if (!(email?.length > 0 && password?.length > 0)) {
+            if (!(email?.trim().length > 0 && password?.trim().length > 0)) {
                 res.status(400).send('Incorrect credentials');
                 return;
             }
@@ -27,12 +27,12 @@ module.exports = {
     async register(req, res) {
         try {
             const {name, email, password} = req.body;
-            if (!(name?.length > 0 && email?.length > 0 && password?.length > 0)) {
+            if (!(name?.trim().length > 0 && email?.trim().length > 0 && password?.trim().length > 0)) {
                 res.status(400).send('Incorrect credentials');
                 return;
             }
             if (!hasUser(email)) {
-                let user = createUser({name, email, password});
+                const user = createUser({name, email, password});
                 res.send(user);
             } else {
                 res.status(409).send('User already exists');
