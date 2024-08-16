@@ -1,26 +1,27 @@
-const {createUser, hasUser, userCheck} = require("@storage/dbHelper");
+const {createUser, hasUser, userCheck} = require("@storage/dbUsers");
+const {HttpStatusCode} = require("axios");
 
 module.exports = {
     async login(req, res) {
         try {
             const {email, password} = req.body;
             if (!(email?.trim().length > 0 && password?.trim().length > 0)) {
-                res.status(400).send('Incorrect credentials');
+                res.status(HttpStatusCode.BadRequest).send('Incorrect credentials');
                 return;
             }
             if (!hasUser(email)) {
-                res.status(404).send('User not found');
+                res.status(HttpStatusCode.NotFound).send('User not found');
                 return;
             }
-            const usr = userCheck({email, password})
+            const usr = await userCheck({email, password})
             if (usr) {
                 res.send(usr);
             } else {
-                res.status(403).send('Invalid password');
+                res.status(HttpStatusCode.Forbidden).send('Invalid password');
             }
         } catch (err) {
             console.error(err);
-            res.status(500).send('Internal Proxy Server Error');
+            res.status(HttpStatusCode.InternalServerError).send('Internal Server Error');
         }
     },
 
@@ -28,18 +29,18 @@ module.exports = {
         try {
             const {name, email, password} = req.body;
             if (!(name?.trim().length > 0 && email?.trim().length > 0 && password?.trim().length > 0)) {
-                res.status(400).send('Incorrect credentials');
+                res.status(HttpStatusCode.BadRequest).send('Incorrect credentials');
                 return;
             }
             if (!hasUser(email)) {
-                const user = createUser({name, email, password});
+                const user = await createUser({name, email, password});
                 res.send(user);
             } else {
-                res.status(409).send('User already exists');
+                res.status(HttpStatusCode.Conflict).send('User already exists');
             }
         } catch (err) {
             console.error(err);
-            res.status(500).send('Internal Proxy Server Error');
+            res.status(HttpStatusCode.InternalServerError).send('Internal Server Error');
         }
     },
 }
