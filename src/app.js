@@ -16,25 +16,25 @@ app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
 
-app.use((req, res, next) => {
-    if (['/login', '/register'].includes(req.url)) {
-        next();
-    } else {
-        const SESSION_EXPIRED = 429
-        const token = req.headers.authorization;
-        // console.log('token: ', token)
-        try {
-            const decoded = jwt.verify(
-                token.replace(/^Bearer\s+/, ""),
-                process.env.PRIVATE_KEY_FOR_JWT
-            );
-            if (decoded.exp > Date.now()) return res.status(SESSION_EXPIRED).send("Session expired") // there is no 492 code in HttpStatusCode
-            next();
-        } catch (err) {
-            res.status(HttpStatusCode.Unauthorized).send();
-        }
-    }
-});
+// app.use((req, res, next) => {
+//     if (['/login', '/register'].includes(req.url)) {
+//         next();
+//     } else {
+//         const SESSION_EXPIRED = 429
+//         const token = req.headers.authorization;
+//         // console.log('token: ', token)
+//         try {
+//             const decoded = jwt.verify(
+//                 token.replace(/^Bearer\s+/, ""),
+//                 process.env.PRIVATE_KEY_FOR_JWT
+//             );
+//             if (decoded.exp > Date.now()) return res.status(SESSION_EXPIRED).send("Session expired") // there is no 492 code in HttpStatusCode
+//             next();
+//         } catch (err) {
+//             res.status(HttpStatusCode.Unauthorized).send();
+//         }
+//     }
+// });
 
 mapRoutes(app);
 
