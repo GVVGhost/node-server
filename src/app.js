@@ -12,6 +12,7 @@ const jwtprivatekey = process.env.JWT_PRIVATE_KEY;
 if (!jwtprivatekey) {
     throw new Error('JWT_PRIVATE_KEY is required for env variables');
 }
+const SESSION_EXPIRED = 429
 const {verify} = require("jsonwebtoken");
 const app = express();
 
@@ -25,23 +26,15 @@ app.use((req, res, next) => {
     if (['/login', '/register'].includes(req.url)) {
         next();
     } else {
-        const SESSION_EXPIRED = 429
         const token = req.headers.authorization.replace(/^Bearer\s+/, "").trim();
         if (token.length === 0) {
             res.status(HttpStatusCode.Unauthorized).send("No token provided");
             return;
         }
-        const key = process.env.JWT_PRIVATE_KEY;
-        if (!key) {
-            throw new Error('JWT_PRIVATE_KEY is required');
-        }
-
         try {
-
-            verify(token, key);
+            verify(token, jwtprivatekey);
             next();
         } catch (err) {
-            // console.error('Session check error', err);
             res.status(SESSION_EXPIRED).send();
         }
     }
@@ -60,7 +53,7 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500);
     res.render('error');
 });
-const port = process.env.PORT || 3006; // Change the port number as desired
+const port = process.env.PORT || 4000; // Change the port number as desired
 app.set('port', port);
 app.listen(port, () => {
     console.log(`Server works on http://localhost:${port}`);
