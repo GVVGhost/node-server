@@ -28,8 +28,8 @@ module.exports = {
 
     async getTasks(req, res) {
         try {
-            const queryFilter = JSON.parse(req.query.filter);
-            const id = queryFilter.id;
+            // const queryFilter = JSON.parse(req.query.filter);
+            const id = req.query.id;
             if (!id) {
                 res.status(HttpStatusCode.BadRequest).send('No user ID provided');
             } else {
