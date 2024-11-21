@@ -28,7 +28,6 @@ module.exports = {
 
     async getTasks(req, res) {
         try {
-            // const queryFilter = JSON.parse(req.query.filter);
             const id = req.query.id;
             if (!id) {
                 res.status(HttpStatusCode.BadRequest).send('No user ID provided');
@@ -71,7 +70,11 @@ module.exports = {
 
     async updateTask(req, res) {
         try {
-            const task = updateTask(req.body);
+            const task = updateTask(req.body)[0];
+            if (!task) {
+                res.status(HttpStatusCode.BadRequest).send();
+                return;
+            }
             res.send({
                 createdAt: task.createdAt,
                 description: task.description,
@@ -89,8 +92,7 @@ module.exports = {
 
     async deleteTask(req, res) {
         try {
-            const queryFilter = JSON.parse(req.query.filter);
-            const uuid = queryFilter.uuid;
+            const uuid = req.query.uuid;
             const tasks = deleteTask(uuid).map(task => task.uuid);
             res.send(tasks);
         } catch (err) {
