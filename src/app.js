@@ -1,19 +1,25 @@
 require('dotenv').config();
-require('module-alias/register')
-const {HttpStatusCode} = require("axios");
+require('module-alias/register');
+const {HttpStatusCode} = require('axios');
 const mapRoutes = require('./mapRoutes');
+const socketHandler = require('./socketHandler');
 const createError = require('http-errors');
 const express = require('express');
 const path = require('path');
 const logger = require('morgan');
 const cookieParser = require('cookie-parser');
 const bodyParser = require('body-parser');
+const { createServer } = require('node:http');
+const {Server} = require('socket.io');
+const {verify} = require("jsonwebtoken");
+
 const jwtprivatekey = process.env.JWT_PRIVATE_KEY;
 if (!jwtprivatekey) {
     throw new Error('JWT_PRIVATE_KEY is required for env variables');
 }
-const SESSION_EXPIRED = 429
-const {verify} = require("jsonwebtoken");
+
+const SESSION_EXPIRED = 429;
+
 const app = express();
 
 app.set('views', path.join(__dirname, 'views'));
@@ -21,13 +27,15 @@ app.set('view engine', 'pug');
 app.use(bodyParser.json());
 app.use(bodyParser.urlencoded({extended: false}));
 app.use(cookieParser());
+app.use(logger('dev'));
+app.use(express.static(path.join(__dirname, 'public')));
 
 app.use((req, res, next) => {
     if (['/login', '/register'].includes(req.url)) {
         next();
     } else {
-        const token = req.headers.authorization.replace(/^Bearer\s+/, "").trim();
-        if (token.length === 0) {
+        const token = req.headers.authorization?.replace(/^Bearer\s+/, "").trim();
+        if (!token) {
             res.status(HttpStatusCode.Unauthorized).send("No token provided");
             return;
         }
@@ -42,9 +50,7 @@ app.use((req, res, next) => {
 
 mapRoutes(app);
 
-app.use(logger('dev'));
-app.use(express.static(path.join(__dirname, 'public')));
-app.use(function (req, res, next) {
+app.use((req, res, next) => {
     next(createError(404));
 });
 app.use((err, req, res, next) => {
@@ -53,10 +59,18 @@ app.use((err, req, res, next) => {
     res.status(err.status || 500);
     res.render('error');
 });
-const port = process.env.PORT || 4000; // Change the port number as desired
-app.set('port', port);
-app.listen(port, () => {
-    console.log(`Server works on http://localhost:${port}`);
+
+const port = process.env.PORT || 4000;
+const server = createServer(app);
+
+const io = new Server(server, {
+    connectionStateRecovery: {}
+});
+
+socketHandler(io)
+
+server.listen(port, () => {
+    console.log(`Server running at http://localhost:${port}`);
 });
 
 module.exports = app;
